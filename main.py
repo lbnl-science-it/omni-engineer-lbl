@@ -43,15 +43,16 @@ client = OpenAI(
 )
 
 # Some model options available at LBL
-DEFAULT_MODEL = "lbl/cborg-coder:latest"
-#DEFAULT_MODEL = "anthropic/claude:latest"
-#EDITOR_MODEL = "anthropic/claude:latest"
+#DEFAULT_MODEL = "lbl/cborg-coder:latest"
+DEFAULT_MODEL = "anthropic/claude:latest"
+EDITOR_MODEL = "anthropic/claude:latest"
 #DEFAULT_MODEL = "google/gemini:latest"
 #EDITOR_MODEL = "google/gemini:latest"
 #DEFAULT_MODEL = "anthropic/claude-sonnet"
 #EDITOR_MODEL = "anthropic/claude-sonnet"
 #EDITOR_MODEL = "google/gemini-pro"
-EDITOR_MODEL = "lbl/cborg-coder:latest" 
+#EDITOR_MODEL = "lbl/cborg-coder:latest" 
+
 
 SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
