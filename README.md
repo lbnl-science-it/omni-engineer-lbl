@@ -1,4 +1,4 @@
-# LBL Fork
+# LBL Fork -- Windows Version
 This fork is intended to be used by researchers and staff at  Lawrence Berkeley National Laboratory.
  
 The LBL fork is preconfigured to work with [CBORG](https://cborg.lbl.gov/). 
