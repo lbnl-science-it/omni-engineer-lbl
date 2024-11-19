@@ -1,4 +1,5 @@
 import atexit
+import msvcrt
 import os
 from openai import OpenAI
 import sys
@@ -229,14 +230,18 @@ def get_streaming_response(messages, model):
             stream=True,
         )
         full_response = ""
+        command_buffer = "" 
         for chunk in stream:
+            # Windows specific code
             # Check for user input without blocking
-            rlist, _, _ = select.select([sys.stdin], [], [], 0)
-            if rlist:
-                user_input = sys.stdin.readline().strip()
-                if user_input.lower() == '/stop':
-                    print_colored("\n\nResponse interrupted by user.", Fore.YELLOW)
-                    return None
+            while msvcrt.khbit():
+                char  = msvcrt.getch().decode('utf-8', errors='ignore')
+                command_buffer += char
+                if char == '\r': #Enter key pressed
+                    if command_buffer.strip() == '/stop':
+                        print_colored("\n\nResponse interrupted by user.", Fore.YELLOW)
+                        return None
+                    command_buffer = "" # Reset buffer after Enter keypress
 
             if chunk.choices[0].delta.content is not None:
                 content = chunk.choices[0].delta.content
