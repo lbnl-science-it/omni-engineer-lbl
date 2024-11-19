@@ -234,7 +234,7 @@ def get_streaming_response(messages, model):
         for chunk in stream:
             # Windows specific code
             # Check for user input without blocking
-            while msvcrt.khbit():
+            while msvcrt.kbhit():
                 char  = msvcrt.getch().decode('utf-8', errors='ignore')
                 command_buffer += char
                 if char == '\r': #Enter key pressed
