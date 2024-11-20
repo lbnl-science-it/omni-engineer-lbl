@@ -7,3 +7,7 @@ rich
 Pillow
 prompt_toolkit
 requests
+pytest 
+pytest-mock
+pytest-asyncio
+coverage
