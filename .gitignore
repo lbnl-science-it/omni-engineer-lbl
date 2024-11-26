@@ -1,3 +1,10 @@
  .aiconsole_history.txt
  .aiconsole_history.txt
 hello_world.py
+
+.DS_Store
+.coverage
+__pycache__/
+coverage_report.txt
+new_file.txt
+tests/__pycache__/

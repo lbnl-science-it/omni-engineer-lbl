@@ -1,8 +1,25 @@
-import pytest
 import asyncio
-from unittest.mock import MagicMock, AsyncMock
-from openai import OpenAI
+import pytest
 import os
+
+from unittest.mock import MagicMock, AsyncMock
+from types import SimpleNamespace
+#from openai import OpenAI
+
+
+class MockStreamResponse:
+    """Mock response object for OpenAI API streaming."""
+    
+    def __init__(self):
+        """Initialize with default mock response structure."""
+        self.choices = [
+            SimpleNamespace(
+                delta=SimpleNamespace(content="Mock response"),
+                finish_reason=None
+            )
+        ]
+
+
 
 class MockFileSystem:
     """Helper class for file system operations"""
@@ -10,14 +27,46 @@ class MockFileSystem:
         self.files = {
             "test.py": "print('hello')",
             "test.txt": "Hello World",
+            "empty.txt": ""
         }
 
     def read_file(self, filepath):
-        return self.files.get(filepath, "")
+         """Mock file reading"""
+         if filepath in self.files:
+            return self.files[filepath]
+         return f"❌ Error: File not found: {filepath}"
 
     def write_file(self, filepath, content):
         self.files[filepath] = content
         return True
+
+@pytest.fixture
+def mock_file_system():
+    """Provide mock file system instance"""
+    fs = MockFileSystem()
+    return {
+        'files': fs.files,
+        'read': fs.read_file,
+        'write': fs.write_file
+    }
+
+@pytest.fixture
+def mock_session():
+    """Create mock session with proper async support"""
+    session = MagicMock()
+    session.prompt_async = AsyncMock()
+    session.prompt_async.return_value = "test input"
+    return session
+
+@pytest.fixture
+def test_chat_history():
+    """Provide standard test chat history"""
+    return [
+        {"role": "system", "content": "System prompt"},
+        {"role": "user", "content": "Test message"}
+    ]
+
+
 
 class MockImageProcessor:
     """Helper class for image processing"""
@@ -27,27 +76,32 @@ class MockImageProcessor:
 
     @staticmethod
     def validate(url):
-        return True if url.startswith("http") else False
+        """Mock URL Validation"""
+        return url.startswith('http')
 
-async def mock_search_results(query):
-    """Mock function for search results"""
-    return [
-        {"title": "Test Result 1", "body": "Test content 1"},
-        {"title": "Test Result 2", "body": "Test content 2"}
-    ]
+class MockSearchEngine:
+    """Mock search engine operations."""
+    
+    @staticmethod
+    async def search():
+        """Mock search operation."""
+        return [
+            {"title": "Test Result 1", "body": "Test content 1"},
+            {"title": "Test Result 2", "body": "Test content 2"}
+        ]
 
-def create_mock_stream():
-    """Create a mock stream response"""
-    mock_stream = MagicMock()
-    mock_stream.choices = [MagicMock(delta=MagicMock(content="Test response"))]
-    return mock_stream
 
 @pytest.fixture
 def mock_openai_client():
-    """Mock OpenAI client for testing"""
-    mock_client = MagicMock(spec=OpenAI)
-    mock_client.chat.completions.create.return_value = [create_mock_stream()]
+    """Create a properly structured mock OpenAI client."""
+    mock_client = MagicMock()
+    mock_client.chat = MagicMock()
+    mock_client.chat.completions = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(
+        return_value=[MockStreamResponse()]
+    )
     return mock_client
+
 
 @pytest.fixture
 def mock_file_system():
@@ -83,6 +137,7 @@ def mock_image_processing():
         "validate": processor.validate
     }
 
+
 @pytest.fixture(autouse=True)
 def mock_environment():
     """Set up test environment variables"""
@@ -90,13 +145,17 @@ def mock_environment():
     yield
     del os.environ["CBORG_API_KEY"]
 
-@pytest.fixture
-def mock_search():
-    """Mock DuckDuckGo search results"""
-    return mock_search_results
 
 @pytest.fixture
-def event_loop():
-    """Create event loop for async tests"""
-    loop = asyncio.get_event_loop()
+def mock_search_results():
+    """Provide mock search results."""
+    engine = MockSearchEngine()
+    return engine.search
+
+
+@pytest.fixture
+async def event_loop():
+    """Provide event loop for async tests."""
+    loop = asyncio.new_event_loop()
     yield loop
+    loop.close()
