@@ -102,6 +102,12 @@ def mock_openai_client():
     )
     return mock_client
 
+@pytest.fixture
+def mock_write(mocker):
+    """Mock File writing operations"""
+    mock = mocker.patch('builtins.open', mocker.mock_open())
+    return mock
+
 
 @pytest.fixture
 def mock_file_system():

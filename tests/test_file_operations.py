@@ -40,10 +40,6 @@ def test_read_file_content_errors(error, expected_message):
         assert "Error reading" in result
 
 
-@pytest.mark.parametrize("filename,content", [
-    ("new_file.txt", "New content"),
-    ("test.py", "Updated content")
-])
 def test_write_file_content_success(mock_write, mock_file_system):
     """Test successful file writing."""
     test_cases = [
@@ -53,9 +49,8 @@ def test_write_file_content_success(mock_write, mock_file_system):
     for filename, content in test_cases:
         success = write_file_content(filename, content)
         assert success is True
-        mock_write.assert_called_with(filename, "w")
-        mock_write().write.assert_called_with(content)
-
+        #Verify that content has written to the mock file system
+        assert mock_file_system['files'][filename] == content
 
 def test_write_file_content_errors():
     """Test file writing error conditions"""
