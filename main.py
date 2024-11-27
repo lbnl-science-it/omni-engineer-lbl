@@ -89,7 +89,9 @@ file_templates = {
 }
 undo_history = {}
 stored_images = {}
-command_history = FileHistory('.aiconsole_history.txt')
+HOME_DIR = os.path.expanduser('~')
+HISTORY_FILE = os.path.join(HOME_DIR,'.aiconsole_history.txt')
+command_history = FileHistory(HISTORY_FILE)
 commands = WordCompleter(['/add', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
 session = PromptSession(history=command_history)
 force_exit = False
@@ -660,7 +662,7 @@ async def show_file_content(filepath):
         print(content)
 
 def delete_history_file():
-    history_file = '.aiconsole_history.txt'
+    history_file = HISTORY_FILE 
     if os.path.exists(history_file):
         try:
             os.remove(history_file)
