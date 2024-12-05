@@ -31,10 +31,10 @@ class MockFileSystem:
         }
 
     def read_file(self, filepath):
-         """Mock file reading"""
-         if filepath in self.files:
-            return self.files[filepath]
-         return f"❌ Error: File not found: {filepath}"
+        """Mock file reading"""
+        if filepath not in self.files:
+            raise FileNotFoundError(f"File not found: {filepath}")
+        return self.files[filepath]
 
     def write_file(self, filepath, content):
         self.files[filepath] = content
@@ -158,10 +158,10 @@ def mock_search_results():
     engine = MockSearchEngine()
     return engine.search
 
-
 @pytest.fixture
 async def event_loop():
     """Provide event loop for async tests."""
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
+
