@@ -52,6 +52,9 @@ def test_validate_image_url():
 
 @pytest.mark.asyncio
 async def test_handle_image_command(test_chat_history):
+    # Reset stored images
+    main.stored_images.clear()
+    
     mock_response = MagicMock()
     mock_response.headers = {'Content-Type': 'image/jpeg'}
     mock_response.content = BytesIO(b'fake-image-data').getvalue()

@@ -8,3 +8,4 @@ __pycache__/
 coverage_report.txt
 new_file.txt
 tests/__pycache__/
+/coverage_reports

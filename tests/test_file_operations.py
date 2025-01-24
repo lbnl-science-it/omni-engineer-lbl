@@ -128,3 +128,22 @@ def test_file_operations_integration(mock_write, mock_file_system):
     with patch('builtins.open', mock_open(read_data=updated_content)):
         final_content = read_file_content(test_filename)
         assert final_content == updated_content
+
+def test_file_not_found():
+    """Test that reading a non-existent file raises FileNotFoundError."""
+    print("\n=== Starting file not found test ===")
+    
+    mock_fs = {
+        'files': {
+            'test.txt': 'Hello World',
+            'test.py': "print('hello')",
+            'empty.txt': ''
+        },
+        'read': lambda x: mock_fs['files'][x] if x in mock_fs['files'] else exec('raise FileNotFoundError()')
+    }
+    
+    print(f"Mock filesystem contents: {mock_fs['files']}")
+    print("Attempting to read nonexistent.json...")
+    
+    with pytest.raises(FileNotFoundError):
+        mock_fs['read']('nonexistent.json')

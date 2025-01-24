@@ -10,36 +10,77 @@ import pytest
 import asyncio
 
 from typing import List, Dict, Any, AsyncGenerator
-from main import handle_load_command  # Add this import
-
-
-@pytest.mark.asyncio(scope="function")
-async def test_save_chat_history(
-    event_loop: Any,
-    mock_session: Any,
-    test_chat_history: List[Dict[str, str]],
-    mock_file_system: Dict[str, Any]
-) -> None:
-    """Test saving chat history to a file.
-    
-    Args:
-        mock_session: Mock prompt session
-        test_chat_history: Sample chat history
-        mock_file_system: Mock file system
-    """
-    try:
-        assert mock_session.prompt_async.return_value == "test input"
-        result = mock_file_system["write"]("test_history.json", 
-                                         json.dumps(test_chat_history))
-        
-        assert result is True
-        assert "test_history.json" in mock_file_system["files"]
-        assert mock_file_system["files"]["test_history.json"] == json.dumps(test_chat_history)
-    except Exception as e:
-        pytest.fail(f"Failed to save chat history: {str(e)}")
+from main import handle_load_command, handle_save_command  # Add this import
 
 
 @pytest.mark.asyncio
+async def test_save_chat_history(
+    mock_session: Any,
+    mock_file_system: Dict[str, Any],
+    monkeypatch
+) -> None:
+    """Test saving chat history."""
+    # Create an empty chat history for testing
+    chat_history = []
+    
+    # Use monkeypatch to replace the global session
+    monkeypatch.setattr('main.session', mock_session)
+    mock_session.prompt_async.return_value = "test.json"
+    
+    # Test saving empty history
+    result = await handle_save_command(chat_history)
+    assert "✅" in str(result)
+    
+    # Verify the file was written
+    assert "test.json" in mock_file_system["files"]
+    
+    # Verify the content is valid JSON
+    content = mock_file_system["read"]("test.json")
+    saved_history = json.loads(content)
+    assert isinstance(saved_history, list)
+    
+    # Test error handling
+    mock_session.prompt_async.return_value = ""
+    result = await handle_save_command()
+    assert "❌ Error" in str(result)
+
+@pytest.mark.asyncio(scope="function")
+async def test_load_chat_history_invalid_file(
+    mock_session: Any,
+    mock_file_system: Dict[str, Any],
+    monkeypatch,
+    capsys
+) -> None:
+    """Test handling of invalid file during history load."""
+    print("\n=== Starting invalid file test ===")
+    print(f"Mock file system contents: {mock_file_system['files']}")
+    
+    # Use monkeypatch to replace the global session
+    monkeypatch.setattr('main.session', mock_session)
+    mock_session.prompt_async.return_value = "nonexistent.json"
+    
+    # Get the running loop instead of creating a new one
+    loop = asyncio.get_running_loop()
+    
+    # Execute the command
+    result = await handle_load_command()
+    print("\nDebug output:")
+    print(f"Result type: {type(result)}")
+    print(f"Result value: {result!r}")
+    
+    # Capture the output
+    captured = capsys.readouterr()
+    print(f"\nCaptured stdout:\n{captured.out}")
+    print(f"\nCaptured stderr:\n{captured.err}")
+    
+    # Check that the error message appears in the output
+    expected_error = "[Errno 2] No such file or directory: 'nonexistent.json'"
+    assert f"❌ Error loading chat history: {expected_error}" in captured.out
+    # Also verify that the function returns None for error case
+    assert result is None
+
+
+@pytest.mark.asyncio(loop_scope="function")
 async def test_load_chat_history(
     event_loop: Any,
     mock_session: Any,
@@ -66,7 +107,7 @@ async def test_load_chat_history(
         pytest.fail(f"Failed to load chat history: {str(e)}")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_handle_history_command(
     event_loop: Any,
     test_chat_history: List[Dict[str, str]],
@@ -90,7 +131,7 @@ async def test_handle_history_command(
         pytest.fail(f"Failed to handle history command: {str(e)}")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_reset_chat_history(
     event_loop: Any,
     test_chat_history: List[Dict[str, str]]
@@ -114,12 +155,11 @@ async def test_reset_chat_history(
         pytest.fail(f"Failed to reset chat history: {str(e)}")
 
 
-@pytest.mark.asyncio(scope="function")
+@pytest.mark.asyncio
 async def test_load_chat_history_invalid_file(
     mock_session: Any,
     mock_file_system: Dict[str, Any],
-    monkeypatch,
-    capsys
+    monkeypatch
 ) -> None:
     """Test handling of invalid file during history load."""
     print("\n=== Starting invalid file test ===")
@@ -129,23 +169,13 @@ async def test_load_chat_history_invalid_file(
     monkeypatch.setattr('main.session', mock_session)
     mock_session.prompt_async.return_value = "nonexistent.json"
     
-    # Get the running loop instead of creating a new one
-    loop = asyncio.get_running_loop()
-    
-    # Execute the command
+    # Check for the specific error message that's returned
     result = await handle_load_command()
-    
-    # Capture the output
-    captured = capsys.readouterr()
-    
-    # Check that the error message appears in the output
     expected_error = "[Errno 2] No such file or directory: 'nonexistent.json'"
-    assert f"❌ Error loading chat history: {expected_error}" in captured.out
-    # Also verify that the function returns None for error case
-    assert result is None
+    assert "Error loading chat history: " + expected_error in str(result)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_chat_history_content_validation(
     event_loop: Any,
     test_chat_history: List[Dict[str, str]]
@@ -171,7 +201,7 @@ async def test_chat_history_content_validation(
         pytest.fail(f"Failed content validation: {str(e)}")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_chat_history_operations(
     event_loop: Any,
     test_chat_history: List[Dict[str, str]]
