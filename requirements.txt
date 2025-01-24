@@ -1,7 +1,7 @@
 openai
 python-dotenv
 colorama
-duckduckgo-search==3.8.3
+duckduckgo-search==6.2.7
 pygments
 rich
 Pillow
