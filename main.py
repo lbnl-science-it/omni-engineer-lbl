@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from colorama import init, Fore, Back, Style
 import difflib
 import asyncio
-from duckduckgo_search import AsyncDDGS as DDGS
+from duckduckgo_search import AsyncDDGS 
 import json
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
