@@ -391,9 +391,6 @@ async def handle_edit_command(default_chat_history, editor_chat_history, filepat
             if current_content.startswith("❌"):
                 return default_chat_history, editor_chat_history
 
-            if current_content.startswith("❌"):
-                return default_chat_history, editor_chat_history
-
             lines = current_content.splitlines(keepends=True)
             buffer = ""
             edited_lines = lines.copy()  # Create a copy to store edited lines
