@@ -384,13 +384,12 @@ async def handle_edit_command(default_chat_history, editor_chat_history, filepat
             Instructions: {default_instructions}
 
             Follow only instructions applicable to {filepath}. Output ONLY the new code. No explanations. DO NOT ADD ANYTHING ELSE. no type of file at the beginning of the file like ```python etq. no ``` at the end of the file.
+
+            Add an empty line symbol to the end.
             """
 
             editor_chat_history.append({"role": "user", "content": edit_message})
             current_content = read_file_content(filepath)
-            if current_content.startswith("❌"):
-                return default_chat_history, editor_chat_history
-
             if current_content.startswith("❌"):
                 return default_chat_history, editor_chat_history
 
@@ -425,6 +424,7 @@ async def handle_edit_command(default_chat_history, editor_chat_history, filepat
             editor_chat_history.append({"role": "assistant", "content": result})
 
             if is_diff_on:
+                print("\n🔍 DIFF:")
                 display_diff(current_content, result)  # Show final diff if it's on
 
             # Write the changes to the file only after the entire editing process
