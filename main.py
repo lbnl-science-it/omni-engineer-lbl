@@ -75,6 +75,24 @@ EDITOR_MODEL = "lbl/cborg-coder:latest"
 #EDITOR_MODEL = "aws/command-r-plus-v1"
 #EDITOR_MODEL = "aws/command-r-v1"
 
+ALL_MODELS = [
+    "lbl/deepseek-r1",
+    "openai/gpt-4o",
+    "openai/gpt-4o-mini",
+    "openai/o1",
+    "openai/o1-mini",
+    "anthropic/claude-haiku",
+    "anthropic/claude-sonnet",
+    "anthropic/claude-opus",
+    "google/gemini-pro",
+    "google/gemini-flash",
+    "aws/llama-3.1-405b",
+    "aws/llama-3.1-70b",
+    "aws/llama-3.1-8b",
+    "aws/command-r-plus-v1",
+    "aws/command-r-v1"
+]
+
 SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
 - You explain concepts with clarity
@@ -670,8 +688,12 @@ def show_current_model():
 async def change_model():
     global DEFAULT_MODEL
     new_model = await session.prompt_async(HTML(f"<ansired>Enter the new model name: </ansired> "))
-    DEFAULT_MODEL = new_model
-    print_colored(f"Model changed to: {DEFAULT_MODEL}", Fore.GREEN)
+    if new_model in ALL_MODELS:
+        DEFAULT_MODEL = new_model
+        print_colored(f"Model changed to: {DEFAULT_MODEL}", Fore.GREEN)
+    else:
+        print_colored(f"❌ Model '{new_model}' is not available. Keeping model {DEFAULT_MODEL}.", Fore.RED)
+    
 
 async def show_file_content(filepath):
     content = read_file_content(filepath)
