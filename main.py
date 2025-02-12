@@ -42,7 +42,39 @@ client = OpenAI(
     api_key=os.getenv("CBORG_API_KEY"),
 )
 
-available_models = [
+def fetch_available_models():
+    try:
+        api_key = os.getenv("CBORG_API_KEY")
+        if not api_key:
+            print_colored("Warning: CBORG_API_KEY not found, using hardcoded models", Fore.YELLOW)
+            return []
+            
+        headers = {
+            "Authorization": f"Bearer {api_key}"
+        }
+        response = requests.get("https://api.cborg.lbl.gov/models?return_wildcard_routes=false", headers=headers)
+        response.raise_for_status()  # Raise an error for bad responses
+        models_data = response.json()
+        # Extract the list of model names from the 'id' field
+        model_ids = [model['id'] for model in models_data['data']]
+
+        # Sort the models alphabetically
+        model_ids.sort()
+        
+        # Separate models starting with 'lbl/'
+        lbl_models = [model for model in model_ids if model.startswith('lbl/')]
+        other_models = [model for model in model_ids if not model.startswith('lbl/')]
+        
+        # Concatenate lbl_models at the beginning
+        model_ids = lbl_models + other_models
+
+
+        return model_ids 
+    except requests.exceptions.RequestException as e:
+        print_colored(f"Error fetching available models: {e}. Using hardcoded models.", Fore.YELLOW)
+        return []
+
+available_models_fallback = [
     "lbl/cborg-coder:latest", 
     "lbl/deepseek-r1:llama-70b", 
     "openai/gpt-4o", 
@@ -61,38 +93,12 @@ available_models = [
     "aws/command-r-v1"
     ]
 
-# Some model options available at LBL
+# Try fetching models, fall back to hardcoded list
+available_models = fetch_available_models() if fetch_available_models() else available_models_fallback
+
+# Exchange the default and editor models with the desired models for startup
 DEFAULT_MODEL = "lbl/cborg-coder:latest"
 EDITOR_MODEL = "lbl/cborg-coder:latest"
-#DEFAULT_MODEL = "lbl/deepseek-r1:llama-70b
-#DEFAULT_MODEL= "openai/gpt-4o" 
-#DEFAULT_MODEL = "openai/gpt-4o-mini" 
-#DEFAULT_MODEL = "openai/o1"
-#DEFAULT_MODEL = "openai/o1-mini"
-#DEFAULT_MODEL = "anthropic/claude-haiku"
-#DEFAULT_MODEL = "anthropic/claude-sonnet"
-#DEFAULT_MODEL = "anthropic/claude-opus"
-#DEFAULT_MODEL = "google/gemini-pro"
-#DEFAULT_MODEL = "google/gemini-flash"
-#DEFAULT_MODEL = "aws/llama-3.1-405b"
-#DEFAULT_MODEL = "aws/llama-3.1-70b"
-#DEFAULT_MODEL = "aws/llama-3.1-8b"
-#DEFAULT_MODEL = "aws/command-r-plus-v1"
-#DEFAULT_MODEL = "aws/command-r-v1"
-#EDITOR_MODEL = "lbl/deepseek-r1:llama-70b
-#EDITOR_MODEL = "openai/gpt-4o-mini"
-#EDITOR_MODEL = "openai/o1"
-#EDITOR_MODEL = "openai/o1-mini"
-#EDITOR_MODEL = "anthropic/claude-haiku"
-#EDITOR_MODEL = "anthropic/claude-sonnet"
-#EDITOR_MODEL = "anthropic/claude-opus"
-#EDITOR_MODEL = "google/gemini-pro"
-#EDITOR_MODEL = "google/gemini-flash"
-#EDITOR_MODEL = "aws/llama-3.1-405b"
-#EDITOR_MODEL = "aws/llama-3.1-70b"
-#EDITOR_MODEL = "aws/llama-3.1-8b"
-#EDITOR_MODEL = "aws/command-r-plus-v1"
-#EDITOR_MODEL = "aws/command-r-v1"
 
 SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
@@ -738,7 +744,7 @@ async def change_model():
     print_colored(f"✅ Model updated successfully!", Fore.GREEN)
 
     show_current_model()
-    
+
 async def show_file_content(filepath):
     content = read_file_content(filepath)
     if content.startswith("❌"):
