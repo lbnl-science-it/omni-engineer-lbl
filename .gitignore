@@ -1,4 +1,13 @@
- .aiconsole_history.txt
- .aiconsole_history.txt
+# Warning: Do not store API keys in this repository
+#          and do not push any API keys to public repositories.
+# Set API keys as environment variables for your OS, e.g., in your .zshrc or .bashrc file.
+.env
+
+# History files
+.aiconsole_history.txt
+
+# Local test files
 hello_world.py
+
+# MacOS system file
 .DS_STORE
