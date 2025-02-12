@@ -8,3 +8,6 @@
 
 # Local test files
 hello_world.py
+
+# MacOS system file
+.DS_STORE
