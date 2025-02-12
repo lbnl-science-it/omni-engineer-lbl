@@ -8,7 +8,7 @@ To get started you must:
 2. Set an environment variable on your machine for `CBORG_API_KEY`. Please use the best practices for API key management described [here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety).
 3. The code defaults to the `lbl/cborg-coder:latest` model. If you want to choose another model (for example, Anthropic's Claude 3.5), you must edit the code in `main.py`by uncommenting the relevant models and commenting the existing ones.  
  
-This fork also includes a tool `format_omni_markdown.py` to format saved Markdown chat logs from Omni Engineer for easy reading.   
+This fork also includes a tool `json_chat_log_reformat.py` to format saved Markdown chat logs from Omni Engineer for easy reading.   
 
 # 🧠 Omni Engineer: An AI-Powered Developer Console
 
