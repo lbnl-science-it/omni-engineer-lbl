@@ -42,6 +42,25 @@ client = OpenAI(
     api_key=os.getenv("CBORG_API_KEY"),
 )
 
+available_models = [
+    "lbl/cborg-coder:latest", 
+    "lbl/deepseek-r1:llama-70b", 
+    "openai/gpt-4o", 
+    "openai/gpt-4o-mini", 
+    "openai/o1", 
+    "openai/o1-mini", 
+    "anthropic/claude-haiku", 
+    "anthropic/claude-sonnet", 
+    "anthropic/claude-opus", 
+    "google/gemini-pro", 
+    "google/gemini-flash", 
+    "aws/llama-3.1-405b", 
+    "aws/llama-3.1-70b", 
+    "aws/llama-3.1-8b", 
+    "aws/command-r-plus-v1", 
+    "aws/command-r-v1"
+    ]
+
 # Some model options available at LBL
 DEFAULT_MODEL = "lbl/cborg-coder:latest"
 EDITOR_MODEL = "lbl/cborg-coder:latest"
@@ -665,14 +684,61 @@ async def handle_help_command():
     print_welcome_message()
 
 def show_current_model():
-    print_colored(f"Current model: {DEFAULT_MODEL}", Fore.CYAN)
+    print_colored(f"Current default chat model: {DEFAULT_MODEL}", Fore.CYAN)
+    print_colored(f"Current code editing model: {EDITOR_MODEL}", Fore.CYAN)
 
 async def change_model():
-    global DEFAULT_MODEL
-    new_model = await session.prompt_async(HTML(f"<ansired>Enter the new model name: </ansired> "))
-    DEFAULT_MODEL = new_model
-    print_colored(f"Model changed to: {DEFAULT_MODEL}", Fore.GREEN)
+    global DEFAULT_MODEL, EDITOR_MODEL
 
+    print_colored("\n🔄 Model Selection")
+    print_colored("------------------")
+
+    # Ask which model type to change
+    model_type = await session.prompt_async(HTML(
+        "<ansired>Which model type would you like to change? (EDITOR/DEFAULT/BOTH):</ansired> "
+    ))
+    
+    # Validate model type choice
+    while model_type.upper() not in ['EDITOR', 'DEFAULT', 'BOTH']:
+        print_colored("❌ Invalid choice. Please enter either EDITOR, DEFAULT, or BOTH", Fore.RED)
+        model_type = await session.prompt_async(HTML(
+            "<ansired>Which model type would you like to change? (EDITOR/DEFAULT/BOTH):</ansired> "
+        ))
+  
+    # Show available models
+    print_colored("\nAvailable Models:")
+    print_colored("-----------------")
+    for index, model in enumerate(available_models, 1):
+        print_colored(f"[{index}] {model}", Fore.CYAN)
+    
+    # Get model selection
+    while True:
+        try:
+            model_choice = int(await session.prompt_async(HTML(
+                f"<ansired>Enter the number of the model to use for {model_type.upper()}:</ansired> "
+            )))
+            
+            if 1 <= model_choice <= len(available_models):
+                selected_model = available_models[model_choice - 1]
+                break
+            else:
+                print_colored(f"❌ Invalid selection. Please enter a number between 1 and {len(available_models)}", Fore.RED)
+        except ValueError:
+            print_colored("❌ Please enter a valid number", Fore.RED)
+    
+    # Update the appropriate model
+    if model_type.upper() == "DEFAULT":
+        DEFAULT_MODEL = selected_model
+    elif model_type.upper() == "EDITOR":
+        EDITOR_MODEL = selected_model
+    else:  # BOTH case
+        DEFAULT_MODEL = selected_model
+        EDITOR_MODEL = selected_model
+        
+    print_colored(f"✅ Model updated successfully!", Fore.GREEN)
+
+    show_current_model()
+    
 async def show_file_content(filepath):
     content = read_file_content(filepath)
     if content.startswith("❌"):
