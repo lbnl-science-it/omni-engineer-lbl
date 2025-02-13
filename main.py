@@ -1,6 +1,6 @@
 import atexit
 import os
-from openai import OpenAI, OpenAIError
+from openai import OpenAI
 import sys
 from dotenv import load_dotenv
 from colorama import init, Fore, Back, Style
