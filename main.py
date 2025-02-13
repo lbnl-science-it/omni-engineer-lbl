@@ -701,17 +701,26 @@ async def change_model():
     print_colored("------------------")
 
     # Ask which model type to change
-    model_type = await session.prompt_async(HTML(
-        "<ansired>Which model type would you like to change? (EDITOR/DEFAULT/BOTH):</ansired> "
+    model_selector = await session.prompt_async(HTML(
+        "<ansired>Which model type would you like to change? ([E]DITOR/[D]EFAULT/[B]OTH/[N]ONE):</ansired> "
     ))
-    
-    # Validate model type choice
-    while model_type.upper() not in ['EDITOR', 'DEFAULT', 'BOTH']:
-        print_colored("❌ Invalid choice. Please enter either EDITOR, DEFAULT, or BOTH", Fore.RED)
-        model_type = await session.prompt_async(HTML(
-            "<ansired>Which model type would you like to change? (EDITOR/DEFAULT/BOTH):</ansired> "
+
+    while model_selector.upper() not in ['EDITOR', 'DEFAULT', 'BOTH', 'NONE', 'E', 'D', 'B', 'N']:
+        print_colored("❌ Invalid choice. Please enter either EDITOR, DEFAULT, BOTH or NONE", Fore.RED)
+        model_selector = await session.prompt_async(HTML(
+            "<ansired>Which model type would you like to change? ([E]DITOR/[D]EFAULT/[B]OTH/[N]ONE):</ansired> "
         ))
-  
+
+    if model_selector.upper().startswith("E"):
+        model_type = "EDITOR"
+    elif model_selector.upper().startswith("D"):
+        model_type = "DEFAULT"
+    elif model_selector.upper().startswith("B"):
+        model_type = "BOTH"
+    elif model_selector.upper().startswith("N"):
+        print_colored("No changes made.", Fore.YELLOW)
+        return
+
     # Show available models
     print_colored("\nAvailable Models:")
     print_colored("-----------------")
