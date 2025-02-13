@@ -1,6 +1,6 @@
 import atexit
 import os
-from openai import OpenAI
+from openai import OpenAI, AuthenticationError, APIConnectionError
 import sys
 from dotenv import load_dotenv
 from colorama import init, Fore, Back, Style
@@ -45,16 +45,14 @@ def connect_to_cborg_client():
             api_key=os.getenv("CBORG_API_KEY"),
         )
         # Check if the API key is valid by making a simple request
-        response = client.models.list()
-        if response.status_code == 200:
-            return client
-    except Exception as e:
-        if "Authentication Error" in str(e):
-            print("")
-            print_colored("❌❌❌Invalid CBORG_API_KEY provided.", Fore.RED)
-        else:
-            raise ValueError(f"Error initializing CBORG client: {e}. CBORG", Fore.RED)
-        return None
+        client.models.list()
+        return client
+    except AuthenticationError:
+        print("")
+        print_colored("❌❌❌ Invalid CBORG_API_KEY provided.", Fore.RED)
+    except APIConnectionError as e:
+        print("")
+        print_colored(f"❌❌❌ Error connecting to the CBORG API: {e}", Fore.RED)
 
 def fetch_available_models():
     try:
