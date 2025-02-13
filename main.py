@@ -714,9 +714,16 @@ async def change_model():
     # Show available models
     print_colored("\nAvailable Models:")
     print_colored("-----------------")
-    for index, model in enumerate(available_models, 1):
-        print_colored(f"[{index}] {model}", Fore.CYAN)
-    
+    col_width = max(len(model) for model in available_models) + 5
+    len_models = len(available_models)
+    left_column = available_models[:len_models // 2]
+    right_column = available_models[len_models // 2:]
+
+    for i in range(max(len(left_column), len(right_column))):
+        left_model = f"[{i + 1}] {left_column[i]}" if i < len(left_column) else ""
+        right_model = f"[{i + len_models // 2 + 1}] {right_column[i]}" if i < len(right_column) else ""
+        print_colored(f"{left_model.ljust(col_width)}{right_model}", Fore.CYAN)
+
     # Get model selection
     while True:
         try:
