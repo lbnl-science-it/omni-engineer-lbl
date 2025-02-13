@@ -44,13 +44,17 @@ def connect_to_cborg_client():
             base_url=base_url,
             api_key=os.getenv("CBORG_API_KEY"),
         )
-        return client
-    except OpenAIError as e:
-        if "api_key" in str(e):
+        # Check if the API key is valid by making a simple request
+        response = client.models.list()
+        if response.status_code == 200:
+            return client
+    except Exception as e:
+        if "Authentication Error" in str(e):
             print("")
             print_colored("❌❌❌Invalid CBORG_API_KEY provided.", Fore.RED)
         else:
             raise ValueError(f"Error initializing CBORG client: {e}. CBORG", Fore.RED)
+        return None
 
 def fetch_available_models():
     try:
