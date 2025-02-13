@@ -1,6 +1,6 @@
 import atexit
 import os
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 import sys
 from dotenv import load_dotenv
 from colorama import init, Fore, Back, Style
@@ -36,19 +36,25 @@ is_diff_on = True
 init(autoreset=True)
 load_dotenv()
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
-base_url = "https://api.cborg.lbl.gov"
-client = OpenAI(
-    base_url=base_url,
-    api_key=os.getenv("CBORG_API_KEY"),
-)
+
+def connect_to_cborg_client():
+    base_url = "https://api.cborg.lbl.gov"
+    try:
+        client = OpenAI(
+            base_url=base_url,
+            api_key=os.getenv("CBORG_API_KEY"),
+        )
+        return client
+    except OpenAIError as e:
+        if "api_key" in str(e):
+            print("")
+            print_colored("❌❌❌Invalid CBORG_API_KEY provided.", Fore.RED)
+        else:
+            raise ValueError(f"Error initializing CBORG client: {e}. CBORG", Fore.RED)
 
 def fetch_available_models():
     try:
         api_key = os.getenv("CBORG_API_KEY")
-        if not api_key:
-            print_colored("Warning: CBORG_API_KEY not found, using hardcoded models", Fore.YELLOW)
-            return []
-            
         headers = {
             "Authorization": f"Bearer {api_key}"
         }
@@ -67,34 +73,31 @@ def fetch_available_models():
         
         # Concatenate lbl_models at the beginning
         model_ids = lbl_models + other_models
-
-
+    
         return model_ids 
-    except requests.exceptions.RequestException as e:
-        print_colored(f"Error fetching available models: {e}. Using hardcoded models.", Fore.YELLOW)
-        return []
+    
+    except Exception as e:
+        # Fallback to hardcoded models if fetching fails and give a yellow warning message
+        print_colored(f"Error fetching available models from CBORG: {e}. Using hardcoded models.", Fore.YELLOW)
+        return [
+            "lbl/cborg-coder:latest",
+            "lbl/deepseek-r1:llama-70b",
+            "openai/gpt-4o",
+            "openai/gpt-4o-mini",
+            "openai/o1",
+            "openai/o1-mini",
+            "anthropic/claude-haiku",
+            "anthropic/claude-sonnet",
+            "anthropic/claude-opus",
+            "google/gemini-pro",
+            "google/gemini-flash",
+            "aws/llama-3.1-405b",
+            "aws/llama-3.1-70b",
+            "aws/llama-3.1-8b",
+            "aws/command-r-plus-v1",
+            "aws/command-r-v1"
+        ]
 
-available_models_fallback = [
-    "lbl/cborg-coder:latest", 
-    "lbl/deepseek-r1:llama-70b", 
-    "openai/gpt-4o", 
-    "openai/gpt-4o-mini", 
-    "openai/o1", 
-    "openai/o1-mini", 
-    "anthropic/claude-haiku", 
-    "anthropic/claude-sonnet", 
-    "anthropic/claude-opus", 
-    "google/gemini-pro", 
-    "google/gemini-flash", 
-    "aws/llama-3.1-405b", 
-    "aws/llama-3.1-70b", 
-    "aws/llama-3.1-8b", 
-    "aws/command-r-plus-v1", 
-    "aws/command-r-v1"
-    ]
-
-# Try fetching models, fall back to hardcoded list
-available_models = fetch_available_models() if fetch_available_models() else available_models_fallback
 
 # Exchange the default and editor models with the desired models for startup
 DEFAULT_MODEL = "lbl/cborg-coder:latest"
@@ -696,6 +699,9 @@ def show_current_model():
 async def change_model():
     global DEFAULT_MODEL, EDITOR_MODEL
 
+    # Try fetching models, fall back to hardcoded list
+    available_models = fetch_available_models()
+
     print_colored("\n🔄 Model Selection")
     print_colored("------------------")
 
@@ -770,6 +776,9 @@ async def main():
     clear_console()
     print_welcome_message()
     print_files_and_searches_in_memory()
+    global client
+    client = connect_to_cborg_client()
+
 
     session = PromptSession(
         history=command_history,
