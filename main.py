@@ -66,19 +66,19 @@ def fetch_available_models():
 
         # Sort the models alphabetically
         model_ids.sort()
-        
+
         # Separate models starting with 'lbl/'
         lbl_models = [model for model in model_ids if model.startswith('lbl/')]
         other_models = [model for model in model_ids if not model.startswith('lbl/')]
-        
+
         # Concatenate lbl_models at the beginning
         model_ids = lbl_models + other_models
-    
-        return model_ids 
-    
+
+        return model_ids
+
     except Exception as e:
         # Fallback to hardcoded models if fetching fails and give a yellow warning message
-        print_colored(f"Error fetching available models from CBORG: {e}. Using hardcoded models.", Fore.YELLOW)
+        print_colored(f"Error fetching available models from CBORG: {e}. \n\nUsing hardcoded models.", Fore.YELLOW)
         return [
             "lbl/cborg-coder:latest",
             "lbl/deepseek-r1:llama-70b",
