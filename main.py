@@ -839,6 +839,13 @@ async def main():
                 filepaths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history = await handle_add_command(default_chat_history, *filepaths)
                 continue
+            
+            if prompt.startswith("/edit ") or prompt.startswith("/e "):
+                filepaths = prompt.split(" ", 1)[1].strip().split()
+                default_chat_history, editor_chat_history = await handle_edit_command(
+                    default_chat_history, editor_chat_history, filepaths
+                )
+                continue
 
             # new prompt
             if prompt.startswith("/new ") or prompt.startswith("/n "):
