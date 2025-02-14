@@ -33,6 +33,53 @@ init(autoreset=True)
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
 
 
+# Exchange the default and editor models with the desired models for startup
+DEFAULT_MODEL = "lbl/cborg-coder:latest"
+EDITOR_MODEL = "lbl/cborg-coder:latest"
+
+SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
+- You write clean, efficient code
+- You explain concepts with clarity
+- You think through problems step-by-step
+- You're passionate about helping developers improve
+
+When given an /edit instruction:
+- First After completing the code review, construct a plan for the change
+- Then provide specific edit instructions
+- Format your response as edit instructions
+- Do NOT execute changes yourself"""
+
+EDITOR_PROMPT = """You are a code-editing AI. Your mission:
+
+ULTRA IMPORTANT:
+- YOU NEVER!!! add the type of file at the beginning of the file like ```python etq.
+- YOU NEVER!!! add ``` at the start or end of the file meaning you never add anything that is not the code at the start or end of the file.
+
+- Execute line-by-line edit instructions safely
+- If a line doesn't need to be changed, output the line as is.
+- NEVER add or delete lines, unless explicitly instructed
+- YOU ONLY OUTPUT THE CODE.
+- NEVER!!! add the type of file at the beginning of the file like ```python etq.
+- ULTRA IMPORTANT you NEVER!!! add ``` at the start or end of the file meaning you never add anything that is not the code at the start or end of the file.
+- Never change imports or function definitions unless explicitly instructed
+- If you spot potential issues in the instructions, fix them!"""
+
+added_files = []
+stored_searches = {}
+file_templates = {
+    "python": "def main():\n    pass\n\nif __name__ == \"__main__\":\n    main()",
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>",
+    "javascript": "// Your JavaScript code here"
+}
+undo_history = {}
+stored_images = {}
+command_history = FileHistory('.aiconsole_history.txt')
+commands = WordCompleter(['/add', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
+session = PromptSession(history=command_history)
+force_exit = False
+interrupt_output = False
+
+
 def connect_to_cborg_client():
     base_url = "https://api.cborg.lbl.gov"
     try:
@@ -96,53 +143,6 @@ def fetch_available_models():
             "aws/command-r-plus-v1",
             "aws/command-r-v1"
         ]
-
-
-# Exchange the default and editor models with the desired models for startup
-DEFAULT_MODEL = "lbl/cborg-coder:latest"
-EDITOR_MODEL = "lbl/cborg-coder:latest"
-
-SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
-- You write clean, efficient code
-- You explain concepts with clarity
-- You think through problems step-by-step
-- You're passionate about helping developers improve
-
-When given an /edit instruction:
-- First After completing the code review, construct a plan for the change
-- Then provide specific edit instructions
-- Format your response as edit instructions
-- Do NOT execute changes yourself"""
-
-EDITOR_PROMPT = """You are a code-editing AI. Your mission:
-
-ULTRA IMPORTANT:
-- YOU NEVER!!! add the type of file at the beginning of the file like ```python etq.
-- YOU NEVER!!! add ``` at the start or end of the file meaning you never add anything that is not the code at the start or end of the file.
-
-- Execute line-by-line edit instructions safely
-- If a line doesn't need to be changed, output the line as is.
-- NEVER add or delete lines, unless explicitly instructed
-- YOU ONLY OUTPUT THE CODE.
-- NEVER!!! add the type of file at the beginning of the file like ```python etq.
-- ULTRA IMPORTANT you NEVER!!! add ``` at the start or end of the file meaning you never add anything that is not the code at the start or end of the file.
-- Never change imports or function definitions unless explicitly instructed
-- If you spot potential issues in the instructions, fix them!"""
-
-added_files = []
-stored_searches = {}
-file_templates = {
-    "python": "def main():\n    pass\n\nif __name__ == \"__main__\":\n    main()",
-    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>",
-    "javascript": "// Your JavaScript code here"
-}
-undo_history = {}
-stored_images = {}
-command_history = FileHistory('.aiconsole_history.txt')
-commands = WordCompleter(['/add', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
-session = PromptSession(history=command_history)
-force_exit = False
-interrupt_output = False
 
 
 def encode_image(image_path):
