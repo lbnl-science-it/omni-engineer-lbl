@@ -303,7 +303,7 @@ def get_streaming_response(messages, model):
         return full_response.strip()
     except Exception as e:
         print_colored(f"Error in streaming response: {e}", Fore.RED)
-        return None 
+        return None
 
 
 def read_file_content(filepath):
@@ -326,7 +326,7 @@ def write_file_content(filepath, content):
         return False
 
 
-def is_text_file(file_path, sample_size=8192, text_characters=set(bytes(range(32,127)) + b'\n\r\t\b')):
+def is_text_file(file_path, sample_size=8192, text_characters=set(bytes(range(32, 127)) + b'\n\r\t\b')):
     """Determine whether a file is text or binary."""
     try:
         with open(file_path, 'rb') as f:
@@ -452,11 +452,11 @@ async def handle_edit_command(default_chat_history, editor_chat_history, filepat
                         line, buffer = buffer.split('\n', 1)
                         if line_index < len(edited_lines):
                             edited_lines[line_index] = line
-                            print_colored(f"✏️ Updated Line {line_index+1}: {line[:50]}...", Fore.CYAN)
+                            print_colored(f"✏️ Updated Line {line_index + 1}: {line[:50]}...", Fore.CYAN)
                             line_index += 1
                         else:
                             edited_lines.append(line)
-                            print_colored(f"➕ NEW Line {line_index+1}: {line[:50]}...", Fore.YELLOW)
+                            print_colored(f"➕ NEW Line {line_index + 1}: {line[:50]}...", Fore.YELLOW)
                             line_index += 1
 
             result = '\n'.join(edited_lines) + '\n'
