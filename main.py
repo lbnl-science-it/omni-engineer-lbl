@@ -2,7 +2,7 @@ import atexit
 import os
 from openai import OpenAI, AuthenticationError, APIConnectionError
 import sys
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style
 import difflib
 import asyncio
 from duckduckgo_search import AsyncDDGS
