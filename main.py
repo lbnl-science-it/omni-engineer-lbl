@@ -32,6 +32,7 @@ is_diff_on = True
 init(autoreset=True)
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
 
+
 def connect_to_cborg_client():
     base_url = "https://api.cborg.lbl.gov"
     try:
@@ -48,6 +49,7 @@ def connect_to_cborg_client():
     except APIConnectionError as e:
         print("")
         print_colored(f"❌❌❌ Error connecting to the CBORG API: {e}", Fore.RED)
+
 
 def fetch_available_models():
     try:
@@ -142,6 +144,7 @@ session = PromptSession(history=command_history)
 force_exit = False
 interrupt_output = False
 
+
 def encode_image(image_path):
     """Turn a local image into base64."""
     try:
@@ -151,6 +154,7 @@ def encode_image(image_path):
         return None
     except IOError:
         return None
+
 
 def validate_image_url(url, timeout=10):
     try:
@@ -183,6 +187,7 @@ def validate_image_url(url, timeout=10):
         print_colored(f"Unexpected error: {e}", Fore.RED)
         return False
 
+
 def is_url(string):
     """Check if a string is a valid URL."""
     try:
@@ -190,6 +195,7 @@ def is_url(string):
         return all([result.scheme, result.netloc])
     except ValueError:
         return False
+
 
 async def handle_image_command(filepaths_or_urls, default_chat_history):
     """Add local images & URLs to memory and chat history"""
@@ -258,15 +264,19 @@ async def handle_image_command(filepaths_or_urls, default_chat_history):
 
     return default_chat_history
 
+
 async def aget_results(word):
     results = await AsyncDDGS(proxy=None).atext(word, max_results=100)
     return results
 
+
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+
 def print_colored(text, color=Fore.WHITE, style=Style.NORMAL, end='\n'):
     print(f"{style}{color}{text}{Style.RESET_ALL}", end=end)
+
 
 def get_streaming_response(messages, model):
     try:
@@ -295,6 +305,7 @@ def get_streaming_response(messages, model):
         print_colored(f"Error in streaming response: {e}", Fore.RED)
         return None 
 
+
 def read_file_content(filepath):
     try:
         with open(filepath, 'r', encoding='utf-8') as file:
@@ -304,6 +315,7 @@ def read_file_content(filepath):
     except IOError as e:
         return f"❌ Error reading {filepath}: {e}"
 
+
 def write_file_content(filepath, content):
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -312,6 +324,7 @@ def write_file_content(filepath, content):
     except IOError as e:
         print_colored(f"❌ Error writing to {filepath}: {e}", Fore.RED)
         return False
+
 
 def is_text_file(file_path, sample_size=8192, text_characters=set(bytes(range(32,127)) + b'\n\r\t\b')):
     """Determine whether a file is text or binary."""
@@ -331,6 +344,7 @@ def is_text_file(file_path, sample_size=8192, text_characters=set(bytes(range(32
 
     except IOError:
         return False
+
 
 async def handle_add_command(chat_history, *paths):
     global added_files
@@ -368,6 +382,7 @@ async def handle_add_command(chat_history, *paths):
         print_colored("❌ No valid files were added to knowledge.", Fore.YELLOW)
 
     return chat_history
+
 
 async def handle_edit_command(default_chat_history, editor_chat_history, filepaths):
     all_contents = [read_file_content(fp) for fp in filepaths]
@@ -464,6 +479,7 @@ async def handle_edit_command(default_chat_history, editor_chat_history, filepat
 
     return default_chat_history, editor_chat_history
 
+
 async def handle_new_command(default_chat_history, editor_chat_history, filepaths):
     if not filepaths:
         print_colored("❌ No file paths provided.", Fore.RED)
@@ -494,6 +510,7 @@ async def handle_new_command(default_chat_history, editor_chat_history, filepath
 
     return default_chat_history, editor_chat_history
 
+
 async def handle_clear_command():
     global added_files, stored_searches, stored_images
     cleared_something = False
@@ -517,6 +534,7 @@ async def handle_clear_command():
     if not cleared_something:
         print_colored("ℹ️ No files, searches or images in memory to clear.", Fore.YELLOW)
 
+
 async def handle_reset_command(default_chat_history, editor_chat_history):
     """Clears all chat history and added files memory."""
     global added_files, stored_searches, stored_images
@@ -537,6 +555,7 @@ async def handle_reset_command(default_chat_history, editor_chat_history):
 
     return default_chat_history, editor_chat_history  # Return the resetted histories
 
+
 def toggle_diff():
     global is_diff_on
     is_diff_on = not is_diff_on
@@ -546,12 +565,14 @@ def toggle_diff():
         Fore.YELLOW,
     )
 
+
 def handle_history_command(chat_history):
     print_colored("\n📜 Chat History:", Fore.BLUE)
     for idx, message in enumerate(chat_history[1:], 1):  # Skip system message
         role = message['role'].capitalize()
         content = message['content'][:100] + "..." if len(message['content']) > 100 else message['content']
         print_colored(f"{idx}. {role}: {content}", Fore.CYAN)
+
 
 async def handle_save_command(chat_history):
     filename = await session.prompt_async(HTML(f"<ansired>Enter filename to save chat history:</ansired> "))
@@ -561,6 +582,7 @@ async def handle_save_command(chat_history):
         print_colored(f"✅ Chat history saved to {filename}", Fore.GREEN)
     except IOError as e:
         print_colored(f"❌ Error saving chat history: {e}", Fore.RED)
+
 
 async def handle_load_command():
     filename = await session.prompt_async(HTML(f"<ansired>Enter filename to load chat history:</ansired> "))
@@ -572,6 +594,7 @@ async def handle_load_command():
     except IOError as e:
         print_colored(f"❌ Error loading chat history: {e}", Fore.RED)
         return None
+
 
 async def handle_undo_command(filepath):
     if not filepath:
@@ -587,9 +610,11 @@ async def handle_undo_command(filepath):
     else:
         print_colored(f"❌ No undo history for {filepath}", Fore.RED)
 
+
 def syntax_highlight(code, language):
     lexer = get_lexer_by_name(language)
     return highlight(code, lexer, TerminalFormatter())
+
 
 def print_welcome_message():
     print_colored(
@@ -632,12 +657,13 @@ def print_welcome_message():
         "Use '<command> help' for more information on a specific command.",
         Fore.YELLOW,
     )
-    
+
     print_colored(
         "Type '/stop' and press Enter at any time to interrupt the AI's response.",
         Fore.RED,
     )
-   
+
+
 def print_files_and_searches_in_memory():
     if added_files:
         file_list = ', '.join(added_files)
@@ -650,6 +676,7 @@ def print_files_and_searches_in_memory():
             f"🔍 Searches currently in memory: {search_list}", Fore.CYAN, Style.BRIGHT
         )
 
+
 def display_diff(original, edited):
     diff = difflib.unified_diff(
         original.splitlines(), edited.splitlines(), lineterm='', n=0
@@ -661,6 +688,7 @@ def display_diff(original, edited):
             print_colored(line, Fore.RED)
         else:
             print_colored(line, Fore.BLUE)
+
 
 async def handle_search_command(default_chat_history):
     search_query = await session.prompt_async(HTML(f"<ansired>What would you like to search?</ansired> "))
@@ -687,12 +715,15 @@ async def handle_search_command(default_chat_history):
 
     return default_chat_history
 
+
 async def handle_help_command():
     print_welcome_message()
+
 
 def show_current_model():
     print_colored(f"Current default chat model: {DEFAULT_MODEL}", Fore.CYAN)
     print_colored(f"Current code editing model: {EDITOR_MODEL}", Fore.CYAN)
+
 
 async def change_model():
     global DEFAULT_MODEL, EDITOR_MODEL
@@ -743,7 +774,7 @@ async def change_model():
             model_choice = int(await session.prompt_async(HTML(
                 f"<ansired>Enter the number of the model to use for {model_type.upper()}:</ansired> "
             )))
-            
+
             if 1 <= model_choice <= len(available_models):
                 selected_model = available_models[model_choice - 1]
                 break
@@ -751,7 +782,7 @@ async def change_model():
                 print_colored(f"❌ Invalid selection. Please enter a number between 1 and {len(available_models)}", Fore.RED)
         except ValueError:
             print_colored("❌ Please enter a valid number", Fore.RED)
-    
+
     # Update the appropriate model
     if model_type.upper() == "DEFAULT":
         DEFAULT_MODEL = selected_model
@@ -760,10 +791,11 @@ async def change_model():
     else:  # BOTH case
         DEFAULT_MODEL = selected_model
         EDITOR_MODEL = selected_model
-        
+
     print_colored(f"✅ Model updated successfully!", Fore.GREEN)
 
     show_current_model()
+
 
 async def show_file_content(filepath):
     content = read_file_content(filepath)
@@ -773,6 +805,7 @@ async def show_file_content(filepath):
         print_colored(f"Content of {filepath}:", Fore.CYAN)
         print(content)
 
+
 def delete_history_file():
     history_file = '.aiconsole_history.txt'
     if os.path.exists(history_file):
@@ -781,6 +814,7 @@ def delete_history_file():
             print_colored("History file deleted.", Fore.GREEN)
         except Exception as e:
             print_colored(f"Error deleting history file: {e}", Fore.RED)
+
 
 async def main():
     global interrupt_output, force_exit
@@ -793,21 +827,20 @@ async def main():
     global client
     client = connect_to_cborg_client()
 
-
     session = PromptSession(
         history=command_history,
         enable_suspend=True,
         complete_while_typing=True
     )
 
-
     while True:
         try:
             if force_exit:
                 print_colored("Gracefully exiting...", Fore.YELLOW)
                 break
-             
-            prompt = await session.prompt_async(HTML(f"<ansired>\n\nYou:</ansired> "),
+
+            prompt = await session.prompt_async(
+                HTML(f"<ansired>\n\nYou:</ansired> "),
                 auto_suggest=AutoSuggestFromHistory(),
                 completer=commands,
                 refresh_interval=0.5,
@@ -828,13 +861,13 @@ async def main():
                     "Thank you for using the CBORG Developer Console. Goodbye!", Fore.MAGENTA
                 )
                 break
-                        
+
             # add prompt
             if prompt.startswith("/add ") or prompt.startswith("/a "):
                 filepaths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history = await handle_add_command(default_chat_history, *filepaths)
                 continue
-            
+
             if prompt.startswith("/edit ") or prompt.startswith("/e "):
                 filepaths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history, editor_chat_history = await handle_edit_command(
