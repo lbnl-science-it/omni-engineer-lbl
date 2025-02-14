@@ -74,7 +74,7 @@ file_templates = {
 undo_history = {}
 stored_images = {}
 command_history = FileHistory('.aiconsole_history.txt')
-commands = WordCompleter(['/add', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
+commands = WordCompleter(['/add', '/remove', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
 session = PromptSession(history=command_history)
 force_exit = False
 interrupt_output = False
@@ -384,6 +384,44 @@ async def handle_add_command(chat_history, *paths):
     return chat_history
 
 
+async def handle_remove_command(chat_history, *paths):
+    global added_files
+    contents = []
+    new_context = ""
+
+    for path in paths:
+        if os.path.isfile(path):  # File handling
+            content = read_file_content(path)
+            if not content.startswith("❌"):
+                contents.append((path, content))
+                added_files.remove(path)
+
+        elif os.path.isdir(path):  # Directory handling
+            print_colored(f"📁 Processing folder: {path}", Fore.CYAN)
+            for item in os.listdir(path):
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path) and is_text_file(item_path):
+                    content = read_file_content(item_path)
+                    if not content.startswith("❌"):
+                        contents.append((item_path, content))
+                        added_files.remove(item_path)
+
+        else:
+            print_colored(f"❌ '{path}' is neither a valid file nor folder.", Fore.RED)
+
+    if contents:
+        for fp, content in contents:
+            new_context += f"""The following file has been removed: {fp}:
+\n{content}\n\n"""
+
+        chat_history.append({"role": "user", "content": new_context})
+        print_colored(f"✅ Removed {len(contents)} files from knowledge!", Fore.GREEN)
+    else:
+        print_colored("❌ No valid files were removed from knowledge.", Fore.YELLOW)
+
+    return chat_history
+
+
 async def handle_edit_command(default_chat_history, editor_chat_history, filepaths):
     all_contents = [read_file_content(fp) for fp in filepaths]
     valid_files, valid_contents = [], []
@@ -629,6 +667,7 @@ def print_welcome_message():
     table.add_column("Description")
 
     table.add_row("/add", "/a", "Add files to AI's knowledge base")
+    table.add_row("/remove", "/rm", "Remove files from AI's knowledge base")
     table.add_row("/edit", "/e", "Edit existing files")
     table.add_row("/new", "/n", "Create new files")
     table.add_row("/search", "", "Perform a DuckDuckGo search")
@@ -868,6 +907,13 @@ async def main():
                 default_chat_history = await handle_add_command(default_chat_history, *filepaths)
                 continue
 
+            # remove prompt
+            if prompt.startswith("/remove ") or prompt.startswith("/rm "):
+                filepaths = prompt.split(" ", 1)[1].strip().split()
+                default_chat_history = await handle_remove_command(default_chat_history, *filepaths)
+                continue
+
+            # edit prompt
             if prompt.startswith("/edit ") or prompt.startswith("/e "):
                 filepaths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history, editor_chat_history = await handle_edit_command(
