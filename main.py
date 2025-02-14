@@ -286,8 +286,8 @@ def get_streaming_response(messages, model):
             rlist, _, _ = select.select([sys.stdin], [], [], 0)
             if rlist:
                 user_input = sys.stdin.readline().strip()
-                if user_input.lower() == '/stop':
-                    print_colored("\n\nResponse interrupted by user.", Fore.YELLOW)
+                if user_input.lower() == '/stop' or user_input.lower() == '/x':
+                    print_colored("\n\n 🚫 Response interrupted by user. ", Fore.YELLOW)
                     return None
 
             if chunk.choices[0].delta.content is not None:
@@ -605,26 +605,27 @@ def print_welcome_message():
     table = Table()
 
     table.add_column("Command", style="cyan", no_wrap=True)
+    table.add_column("Short", style="magenta")
     table.add_column("Description")
 
-    table.add_row("/add", "Add files to AI's knowledge base")
-    table.add_row("/edit", "Edit existing files")
-    table.add_row("/new", "Create new files")
-    table.add_row("/search", "Perform a DuckDuckGo search")
-    table.add_row("/image", "Add image(s) to AI's knowledge base")
-    table.add_row("/clear", "Clear added files, searches, and images from AI's memory")
-    table.add_row("/reset", "Reset entire chat and file memory")
-    table.add_row("/stop", "Stop the output of the Assistant chat.") 
-    table.add_row("/diff", "Toggle display of diffs")
-    table.add_row("/history", "View chat history")
-    table.add_row("/save", "Save chat history to a file")
-    table.add_row("/load", "Load chat history from a file")
-    table.add_row("/undo", "Undo last edit for a specific file")
-    table.add_row("/help", "Show this help message")
-    table.add_row("/model", "Show current AI model")
-    table.add_row("/change_model", "Change the AI model")
-    table.add_row("/show", "Show content of a file")
-    table.add_row("exit", "Exit the application")
+    table.add_row("/add", "/a", "Add files to AI's knowledge base")
+    table.add_row("/edit", "/e", "Edit existing files")
+    table.add_row("/new", "/n", "Create new files")
+    table.add_row("/search", "", "Perform a DuckDuckGo search")
+    table.add_row("/image", "/i", "Add image(s) to AI's knowledge base")
+    table.add_row("/clear", "/c", "Clear added files, searches, and images from AI's memory")
+    table.add_row("/reset", "/r", "Reset entire chat and file memory")
+    table.add_row("/stop", "/x", "Stop the output of the Assistant chat")
+    table.add_row("/diff", "", "Toggle display of diffs")
+    table.add_row("/history", "/hist", "View chat history")
+    table.add_row("/save", "/s", "Save chat history to a file")
+    table.add_row("/load", "/l", "Load chat history from a file")
+    table.add_row("/undo", "/u", "Undo last edit for a specific file")
+    table.add_row("/help", "/h", "Show this help message")
+    table.add_row("/model", "/m", "Show current AI model")
+    table.add_row("/change_model", "/cm", "Change the AI model")
+    table.add_row("/show", "/sh", "Show content of a file")
+    table.add_row("exit", "", "Exit the application")
 
     console.print(table)
 
@@ -708,23 +709,39 @@ async def change_model():
     print_colored("------------------")
 
     # Ask which model type to change
-    model_type = await session.prompt_async(HTML(
-        "<ansired>Which model type would you like to change? (EDITOR/DEFAULT/BOTH):</ansired> "
+    model_selector = await session.prompt_async(HTML(
+        "<ansired>Which model type would you like to change? ([E]DITOR/[D]EFAULT/[B]OTH/[N]ONE):</ansired> "
     ))
-    
-    # Validate model type choice
-    while model_type.upper() not in ['EDITOR', 'DEFAULT', 'BOTH']:
-        print_colored("❌ Invalid choice. Please enter either EDITOR, DEFAULT, or BOTH", Fore.RED)
-        model_type = await session.prompt_async(HTML(
-            "<ansired>Which model type would you like to change? (EDITOR/DEFAULT/BOTH):</ansired> "
+
+    while model_selector.upper() not in ['EDITOR', 'DEFAULT', 'BOTH', 'NONE', 'E', 'D', 'B', 'N']:
+        print_colored("❌ Invalid choice. Please enter either EDITOR, DEFAULT, BOTH or NONE", Fore.RED)
+        model_selector = await session.prompt_async(HTML(
+            "<ansired>Which model type would you like to change? ([E]DITOR/[D]EFAULT/[B]OTH/[N]ONE):</ansired> "
         ))
-  
+
+    if model_selector.upper().startswith("E"):
+        model_type = "EDITOR"
+    elif model_selector.upper().startswith("D"):
+        model_type = "DEFAULT"
+    elif model_selector.upper().startswith("B"):
+        model_type = "BOTH"
+    elif model_selector.upper().startswith("N"):
+        print_colored("No changes made.", Fore.YELLOW)
+        return
+
     # Show available models
     print_colored("\nAvailable Models:")
     print_colored("-----------------")
-    for index, model in enumerate(available_models, 1):
-        print_colored(f"[{index}] {model}", Fore.CYAN)
-    
+    col_width = max(len(model) for model in available_models) + 5
+    len_models = len(available_models)
+    left_column = available_models[:len_models // 2]
+    right_column = available_models[len_models // 2:]
+
+    for i in range(max(len(left_column), len(right_column))):
+        left_model = f"[{i + 1}] {left_column[i]}" if i < len(left_column) else ""
+        right_model = f"[{i + len_models // 2 + 1}] {right_column[i]}" if i < len(right_column) else ""
+        print_colored(f"{left_model.ljust(col_width)}{right_model}", Fore.CYAN)
+
     # Get model selection
     while True:
         try:
@@ -813,85 +830,93 @@ async def main():
 
             if prompt.lower() == "exit":
                 print_colored(
-                    "Thank you for using the OpenAI Developer Console. Goodbye!", Fore.MAGENTA
+                    "Thank you for using the CBORG Developer Console. Goodbye!", Fore.MAGENTA
                 )
                 break
-
-            if prompt.startswith("/add "):
-                filepaths = prompt.split("/add ", 1)[1].strip().split()
+                        
+            # add prompt
+            if prompt.startswith("/add ") or prompt.startswith("/a "):
+                filepaths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history = await handle_add_command(default_chat_history, *filepaths)
                 continue
 
-            if prompt.startswith("/edit "):
-                filepaths = prompt.split("/edit ", 1)[1].strip().split()
-                default_chat_history, editor_chat_history = await handle_edit_command(
-                    default_chat_history, editor_chat_history, filepaths
-                )
-                continue
-
-            if prompt.startswith("/new "):
-                filepaths = prompt.split("/new ", 1)[1].strip().split()
+            # new prompt
+            if prompt.startswith("/new ") or prompt.startswith("/n "):
+                filepaths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history, editor_chat_history = await handle_new_command(
                     default_chat_history, editor_chat_history, filepaths
                 )
                 continue
 
-            if prompt.startswith("/search"):
+            # search prompt
+            if prompt.startswith("/search "):
                 default_chat_history = await handle_search_command(default_chat_history)
                 continue
 
-            if prompt.startswith("/clear"):
+            # clear prompt
+            if prompt.startswith("/clear") or prompt == "/c":
                 await handle_clear_command()
                 continue
 
-            if prompt.startswith("/reset"):
+            # reset prompt
+            if prompt.startswith("/reset") or prompt == "/r":
                 default_chat_history, editor_chat_history = await handle_reset_command(
                     default_chat_history, editor_chat_history
                 )
                 continue
 
+            # diff prompt
             if prompt.startswith("/diff"):
                 toggle_diff()
                 continue
 
-            if prompt.startswith("/history"):
+            # history prompt
+            if prompt.startswith("/hist"):
                 handle_history_command(default_chat_history)
                 continue
 
-            if prompt.startswith("/save"):
+            # save prompt
+            if prompt.startswith("/save") or prompt == "/s":
                 await handle_save_command(default_chat_history)
                 continue
 
-            if prompt.startswith("/image "):
-                image_paths = prompt.split("/image ", 1)[1].strip().split()
+            # image prompt
+            if prompt.startswith("/image ") or prompt.startswith("/i "):
+                image_paths = prompt.split(" ", 1)[1].strip().split()
                 default_chat_history = await handle_image_command(image_paths, default_chat_history)
                 continue
 
-            if prompt.startswith("/load"):
+            # load prompt
+            if prompt.startswith("/load") or prompt == "/l":
                 loaded_history = await handle_load_command()
                 if loaded_history:
                     default_chat_history = loaded_history
                 continue
 
-            if prompt.startswith("/undo "):
-                filepath = prompt.split("/undo ", 1)[1].strip()
+            # undo prompt
+            if prompt.startswith("/undo ") or prompt.startswith("/u "):
+                filepath = prompt.split(" ", 1)[1].strip()
                 await handle_undo_command(filepath)
                 continue
 
-            if prompt.startswith("/help"):
+            # help prompt
+            if prompt.startswith("/help") or prompt == "/h":
                 await handle_help_command()
                 continue
 
-            if prompt.startswith("/model"):
+            # model prompt
+            if prompt.startswith("/model") or prompt == "/m":
                 show_current_model()
                 continue
 
-            if prompt.startswith("/change_model"):
+            # change model prompt
+            if prompt.startswith("/change_model") or prompt == "/cm":
                 await change_model()
                 continue
 
-            if prompt.startswith("/show "):
-                filepath = prompt.split("/show ", 1)[1].strip()
+            # show prompt
+            if prompt.startswith("/show ") or prompt.startswith("/sh "):
+                filepath = prompt.split(" ", 1)[1].strip()
                 await show_file_content(filepath)
                 continue
 
