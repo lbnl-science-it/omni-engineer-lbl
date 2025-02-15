@@ -353,20 +353,28 @@ async def handle_add_command(chat_history, *paths):
 
     for path in paths:
         if os.path.isfile(path):  # File handling
-            content = read_file_content(path)
-            if not content.startswith("❌"):
-                contents.append((path, content))
-                added_files.append(path)
+            if path in added_files:
+                print_colored(f"⚠️ '{path}' is already in memory. Skipping.", Fore.YELLOW)
+                continue
+            else:
+                content = read_file_content(path)
+                if not content.startswith("❌"):
+                    contents.append((path, content))
+                    added_files.append(path)
 
         elif os.path.isdir(path):  # Directory handling
             print_colored(f"📁 Processing folder: {path}", Fore.CYAN)
             for item in os.listdir(path):
                 item_path = os.path.join(path, item)
-                if os.path.isfile(item_path) and is_text_file(item_path):
-                    content = read_file_content(item_path)
-                    if not content.startswith("❌"):
-                        contents.append((item_path, content))
-                        added_files.append(item_path)
+                if item_path in added_files:
+                    print_colored(f"⚠️ '{item}' is already in memory. Skipping.", Fore.YELLOW)
+                    continue
+                else:
+                    if os.path.isfile(item_path) and is_text_file(item_path):
+                        content = read_file_content(item_path)
+                        if not content.startswith("❌"):
+                            contents.append((item_path, content))
+                            added_files.append(item_path)
 
         else:
             print_colored(f"❌ '{path}' is neither a valid file nor folder.", Fore.RED)
@@ -380,6 +388,9 @@ async def handle_add_command(chat_history, *paths):
         print_colored(f"✅ Added {len(contents)} files to knowledge!", Fore.GREEN)
     else:
         print_colored("❌ No valid files were added to knowledge.", Fore.YELLOW)
+
+    # print current files in memory
+    print_files_and_searches_in_memory()
 
     return chat_history
 
@@ -418,6 +429,9 @@ async def handle_remove_command(chat_history, *paths):
         print_colored(f"✅ Removed {len(contents)} files from knowledge!", Fore.GREEN)
     else:
         print_colored("❌ No valid files were removed from knowledge.", Fore.YELLOW)
+
+    # print current files in memory
+    print_files_and_searches_in_memory()
 
     return chat_history
 
