@@ -2,6 +2,7 @@ import atexit
 import os
 from openai import OpenAI, AuthenticationError, APIConnectionError
 import sys
+from dotenv import load_dotenv
 from colorama import init, Fore, Style
 import difflib
 import asyncio
@@ -30,6 +31,7 @@ from prompt_toolkit.completion import WordCompleter
 is_diff_on = True
 
 init(autoreset=True)
+load_dotenv()
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
 
 
