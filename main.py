@@ -74,7 +74,7 @@ file_templates = {
 undo_history = {}
 stored_images = {}
 command_history = FileHistory('.aiconsole_history.txt')
-commands = WordCompleter(['/add', '/remove', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
+commands = WordCompleter(['/add', '/remove', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', '/info', 'exit'], ignore_case=True)
 session = PromptSession(history=command_history)
 force_exit = False
 interrupt_output = False
@@ -698,6 +698,7 @@ def print_welcome_message():
     table.add_row("/model", "/m", "Show current AI model")
     table.add_row("/change_model", "/cm", "Change the AI model")
     table.add_row("/show", "/sh", "Show content of a file")
+    table.add_row("/info", "", "Show information about the AI and files in memory")
     table.add_row("exit", "", "Exit the application")
 
     console.print(table)
@@ -907,8 +908,6 @@ async def main():
             if prompt is None or prompt.strip() == "":
                 continue
 
-            print_files_and_searches_in_memory()
-
             if prompt.lower() == "exit":
                 print_colored(
                     "Thank you for using the CBORG Developer Console. Goodbye!", Fore.MAGENTA
@@ -1013,6 +1012,16 @@ async def main():
             if prompt.startswith("/show ") or prompt.startswith("/sh "):
                 filepath = prompt.split(" ", 1)[1].strip()
                 await show_file_content(filepath)
+                continue
+
+            # info prompt
+            if prompt.startswith("/info"):
+                if added_files:
+                    print_files_and_searches_in_memory()
+                else:
+                    print_colored("ℹ️ No files or searches in memory.", Fore.YELLOW)
+                model_info = f"Default model: {DEFAULT_MODEL}\nEditor model: {EDITOR_MODEL}"
+                print_colored(model_info, Fore.CYAN)
                 continue
 
             print_colored("\n🤖 Assistant:", Fore.BLUE)
