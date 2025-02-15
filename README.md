@@ -40,6 +40,7 @@ Omni Engineer is a spiritual successor to [Claude Engineer](https://github.com/D
 ## 🖥️ Commands
 
 - `/add <filepath>`: Add files to AI context
+- `/remove <filepath>`: Remove files to AI context
 - `/edit <filepath>`: Edit existing files
 - `/new <filepath>`: Create new files
 - `/search`: Perform web searches
