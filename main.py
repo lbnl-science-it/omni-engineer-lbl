@@ -670,7 +670,7 @@ def syntax_highlight(code, language):
 
 def print_welcome_message():
     print_colored(
-        "🔮 Welcome to the Assistant Developer Console! 🔮", Fore.MAGENTA, Style.BRIGHT
+        "🔮 Welcome to the CBORG Developer Console! 🔮", Fore.MAGENTA, Style.BRIGHT
     )
 
     console = Console()
