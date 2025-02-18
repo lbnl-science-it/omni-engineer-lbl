@@ -322,6 +322,9 @@ def get_streaming_response(messages, model):
         return full_response.strip()
     except Exception as e:
         print_colored(f"Error in streaming response: {e}", Fore.RED)
+        if "Invalid model name" in str(e):
+            print("")
+            print_colored(f"🤖 Model {model} not found: Checkout available models using the /change_model command.", Fore.RED)
         return None
 
 
