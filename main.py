@@ -28,18 +28,20 @@ from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.completion import WordCompleter
 
 
-is_diff_on = True
-
 init(autoreset=True)
 load_dotenv()
-# Local clients/VPN users can also use https://api-local.cborg.lbl.gov
 
 
-# Exchange the default and editor models with the desired models for startup
-DEFAULT_MODEL = "lbl/cborg-coder:latest"
-EDITOR_MODEL = "lbl/cborg-coder:latest"
-
-SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
+def load_config():
+    # Load configuration from config.json
+    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    try:
+        with open(config_path, 'r') as config_file:
+            config = json.load(config_file)
+            global DEFAULT_MODEL, EDITOR_MODEL, SYSTEM_PROMPT, EDITOR_PROMPT
+            DEFAULT_MODEL = config.get("default_model", "lbl/cborg-coder:latest")
+            EDITOR_MODEL = config.get("editor_model", "lbl/cborg-coder:latest")
+            SYSTEM_PROMPT = config.get("system_prompt", """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
 - You explain concepts with clarity
 - You think through problems step-by-step
@@ -49,9 +51,8 @@ When given an /edit instruction:
 - First After completing the code review, construct a plan for the change
 - Then provide specific edit instructions
 - Format your response as edit instructions
-- Do NOT execute changes yourself"""
-
-EDITOR_PROMPT = """You are a code-editing AI. Your mission:
+- Do NOT execute changes yourself""")
+            EDITOR_PROMPT = config.get("editor_prompt", """You are a code-editing AI. Your mission:
 
 ULTRA IMPORTANT:
 - YOU NEVER!!! add the type of file at the beginning of the file like ```python etq.
@@ -64,17 +65,33 @@ ULTRA IMPORTANT:
 - NEVER!!! add the type of file at the beginning of the file like ```python etq.
 - ULTRA IMPORTANT you NEVER!!! add ``` at the start or end of the file meaning you never add anything that is not the code at the start or end of the file.
 - Never change imports or function definitions unless explicitly instructed
-- If you spot potential issues in the instructions, fix them!"""
+- If you spot potential issues in the instructions, fix them!""")
 
-added_files = []
-stored_searches = {}
-file_templates = {
-    "python": "def main():\n    pass\n\nif __name__ == \"__main__\":\n    main()",
-    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>",
-    "javascript": "// Your JavaScript code here"
-}
-undo_history = {}
-stored_images = {}
+            global is_diff_on
+            is_diff_on = config.get("is_diff_on", True)
+
+            global file_templates
+            file_templates = config.get("file_templates", {
+                "python": "def main():\n    pass\n\nif __name__ == \"__main__\":\n    main()",
+                "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>",
+                "javascript": "// Your JavaScript code here"
+            })
+
+            global stored_images, stored_searches, undo_history, added_files
+            stored_images = config.get("stored_images", {})
+            stored_searches = config.get("stored_searches", {})
+            undo_history = config.get("undo_history", {})
+            added_files = config.get("added_files", [])
+
+            print_colored(f"🔧 Configuration loaded successfully from {config_path}", Fore.GREEN)
+
+    except FileNotFoundError:
+        print_colored(f"❌ Configuration file not found: {config_path}", Fore.RED)
+    except json.JSONDecodeError as e:
+        print_colored(f"❌ Error decoding JSON from config file: {e}", Fore.RED)
+# Local clients/VPN users can also use https://api-local.cborg.lbl.gov
+
+
 command_history = FileHistory('.aiconsole_history.txt')
 commands = WordCompleter(['/add', '/remove', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', '/info', 'exit'], ignore_case=True)
 session = PromptSession(history=command_history)
@@ -875,6 +892,7 @@ def delete_history_file():
 async def main():
     global interrupt_output, force_exit
     atexit.register(delete_history_file)
+    load_config()
     default_chat_history = [{"role": "system", "content": SYSTEM_PROMPT}]
     editor_chat_history = [{"role": "system", "content": EDITOR_PROMPT}]
     clear_console()
