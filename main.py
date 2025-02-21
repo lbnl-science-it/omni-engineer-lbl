@@ -927,6 +927,30 @@ async def main():
                 await show_file_content(filepath)
                 continue
 
+            # info prompt
+            if prompt.startswith("/info"):
+                if added_files:
+                    print_files_and_searches_in_memory()
+                else:
+                    print_colored("ℹ️ No files or searches in memory.", Fore.YELLOW)
+                model_info = f"Default model: {DEFAULT_MODEL}\nEditor model: {EDITOR_MODEL}"
+                print_colored(model_info, Fore.CYAN)
+                continue
+
+            # print content / mostly for debugging
+            if prompt.startswith("/ph"):
+                print_colored("Chat History:", Fore.RED)
+                for idx, message in enumerate(default_chat_history):  # Skip system message
+                    role = message['role'].capitalize()
+                    content = message['content'][:]
+                    print_colored(f"{idx}. {role}: {content}", Fore.CYAN)
+                print_colored("Editor Chat History:", Fore.RED)
+                for idx, message in enumerate(editor_chat_history):  # Skip system message
+                    role = message['role']
+                    content = message['content'][:]
+                    print_colored(f"{idx}. {role}: {content}", Fore.CYAN)
+                continue
+
             print_colored("\n🤖 Assistant:", Fore.BLUE)
             try:
                 default_chat_history.append({"role": "user", "content": prompt})
