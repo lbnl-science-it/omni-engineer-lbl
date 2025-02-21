@@ -565,6 +565,8 @@ async def handle_new_command(default_chat_history, editor_chat_history, filepath
         file_ext = os.path.splitext(filepath)[1][1:]
         template = file_templates.get(file_ext, "")
         try:
+            # Create subdirectories if they do not exist
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
             with open(filepath, 'x') as f:
                 f.write(template)
             print_colored(f"✅ Created {filepath} with template", Fore.GREEN)
