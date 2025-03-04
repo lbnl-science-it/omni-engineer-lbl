@@ -42,12 +42,12 @@ client = OpenAI(
 )
 
 # Some model options available at LBL
-#DEFAULT_MODEL = "lbl/cborg-coder:latest"
+DEFAULT_MODEL = "lbl/cborg-coder:latest"
 EDITOR_MODEL = "lbl/cborg-coder:latest"
 #DEFAULT_MODEL = "lbl/deepseek-r1:llama-70b
 #DEFAULT_MODEL= "openai/gpt-4o" 
 #DEFAULT_MODEL = "openai/gpt-4o-mini" 
-DEFAULT_MODEL = "openai/o1"
+#DEFAULT_MODEL = "openai/o1"
 #DEFAULT_MODEL = "openai/o1-mini"
 #DEFAULT_MODEL = "anthropic/claude-haiku"
 #DEFAULT_MODEL = "anthropic/claude-sonnet"
@@ -673,6 +673,7 @@ async def change_model():
     new_model = await session.prompt_async(HTML(f"<ansired>Enter the new model name: </ansired> "))
     DEFAULT_MODEL = new_model
     print_colored(f"Model changed to: {DEFAULT_MODEL}", Fore.GREEN)
+    check_model_security()
 
 def display_diff(original, edited):
     """Display the difference between original and edited content."""
@@ -764,6 +765,12 @@ async def main():
             if prompt.lower() == "exit":
                 print_colored(
                     "Thank you for using the omni-engineer-lbl developer console. Goodbye!")
+                break
+
+            if prompt.startswith("/add "):
+                filepaths = prompt.split("/add ", 1)[1].strip().split()
+                default_chat_history = await handle_add_command(default_chat_history, *filepaths)
+                continue
 
             if prompt.startswith("/edit "):
                 filepaths = prompt.split("/edit ", 1)[1].strip().split()
