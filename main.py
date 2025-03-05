@@ -618,7 +618,8 @@ def print_welcome_message():
     table.add_row("/stop", "/x", "Stop the output of the Assistant chat")
     table.add_row("/diff", "", "Toggle display of diffs")
     table.add_row("/history", "/hist", "View user prompt history")
-    table.add_row("/ph", "View all chat history")
+    table.add_row("/all_history", "/ph", "View all chat history")
+    table.add_row("/info", "", "View models in use and files added")
     table.add_row("/save", "/s", "Save chat history to a file")
     table.add_row("/load", "/l", "Load chat history from a file")
     table.add_row("/undo", "/u", "Undo last edit for a specific file")
@@ -939,7 +940,7 @@ async def main():
                 continue
 
             # print content / mostly for debugging
-            if prompt.startswith("/ph"):
+            if prompt.startswith("/all_history") or prompt.startswith("/ph"):
                 print_colored("Chat History:", Fore.RED)
                 for idx, message in enumerate(default_chat_history):  # Skip system message
                     role = message['role'].capitalize()
