@@ -617,7 +617,9 @@ def print_welcome_message():
     table.add_row("/reset", "/r", "Reset entire chat and file memory")
     table.add_row("/stop", "/x", "Stop the output of the Assistant chat")
     table.add_row("/diff", "", "Toggle display of diffs")
-    table.add_row("/history", "/hist", "View chat history")
+    table.add_row("/history", "/hist", "View user prompt history")
+    table.add_row("/all_history", "/ph", "View all chat history")
+    table.add_row("/info", "", "View models in use and files added")
     table.add_row("/save", "/s", "Save chat history to a file")
     table.add_row("/load", "/l", "Load chat history from a file")
     table.add_row("/undo", "/u", "Undo last edit for a specific file")
@@ -925,6 +927,30 @@ async def main():
             if prompt.startswith("/show ") or prompt.startswith("/sh "):
                 filepath = prompt.split(" ", 1)[1].strip()
                 await show_file_content(filepath)
+                continue
+
+            # info prompt
+            if prompt.startswith("/info"):
+                if added_files:
+                    print_files_and_searches_in_memory()
+                else:
+                    print_colored("ℹ️ No files or searches in memory.", Fore.YELLOW)
+                model_info = f"Default model: {DEFAULT_MODEL}\nEditor model: {EDITOR_MODEL}"
+                print_colored(model_info, Fore.CYAN)
+                continue
+
+            # print content / mostly for debugging
+            if prompt.startswith("/all_history") or prompt.startswith("/ph"):
+                print_colored("Chat History:", Fore.RED)
+                for idx, message in enumerate(default_chat_history):  # Skip system message
+                    role = message['role'].capitalize()
+                    content = message['content'][:]
+                    print_colored(f"{idx}. {role}: {content}", Fore.CYAN)
+                print_colored("Editor Chat History:", Fore.RED)
+                for idx, message in enumerate(editor_chat_history):  # Skip system message
+                    role = message['role']
+                    content = message['content'][:]
+                    print_colored(f"{idx}. {role}: {content}", Fore.CYAN)
                 continue
 
             print_colored("\n🤖 Assistant:", Fore.BLUE)
