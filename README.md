@@ -1,5 +1,4 @@
 # LBL Fork
-This fork is intended to ONLY be used by researchers and staff at  Lawrence Berkeley National Laboratory.
  
 The LBL fork is preconfigured to work with [CBORG](https://cborg.lbl.gov/). 
 To get started you must:
