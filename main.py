@@ -38,7 +38,8 @@ load_dotenv()
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
 
 def connect_to_cborg_client():
-    base_url = "https://api.cborg.lbl.gov"
+    #base_url = "https://api.cborg.lbl.gov"
+    base_url = "https://api-local.cborg.lbl.gov"
     try:
         client = OpenAI(
             base_url=base_url,
@@ -102,8 +103,8 @@ def fetch_available_models():
 
 
 # Exchange the default and editor models with the desired models for startup
-DEFAULT_MODEL = "lbl/cborg-coder:latest"
-EDITOR_MODEL = "lbl/cborg-coder:latest"
+DEFAULT_MODEL = "lbl/cborg-deepthought:latest"
+EDITOR_MODEL = "lbl/cborg-coder"
 
 SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
@@ -647,7 +648,7 @@ def print_welcome_message():
    
 def print_files_and_searches_in_memory():
     if added_files:
-        file_list = ', '.join(added_files)
+        file_list = ' '.join(added_files)
         print_colored(
             f"📂 Files currently in memory: {file_list}", Fore.CYAN, Style.BRIGHT
         )
